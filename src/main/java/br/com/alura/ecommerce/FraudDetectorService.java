@@ -15,25 +15,25 @@ public class FraudDetectorService {
         while(true){
             var records = consumer.poll(Duration.ofMillis(500));
 
-            if(records.isEmpty()){
-                System.out.println("Não econtrei registros");
-                continue;
-            }
-            for(var record: records) {
-                System.out.printf("----");
-                System.out.println("Processando novo pedido, checkando por fraude!");
-                System.out.println(record.key());
-                System.out.println(record.value());
-                System.out.println(record.partition());
-                System.out.println(record.offset());
-                System.out.printf("----");
-                try {
-                    Thread.sleep(5000);
-                }catch(InterruptedException e) {
-                    e.printStackTrace();
+            if(!records.isEmpty()){
+                System.out.println("Encontrei "+records.count() +" registros!");
+                for(var record: records) {
+                    System.out.printf("----");
+                    System.out.println("Processando novo pedido, checkando por fraude!");
+                    System.out.println(record.key());
+                    System.out.println(record.value());
+                    System.out.println(record.partition());
+                    System.out.println(record.offset());
+                    System.out.printf("----");
+                    try {
+                        Thread.sleep(5000);
+                    }catch(InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                    System.out.printf("Pedido processado");
                 }
-                System.out.printf("Pedido processado");
             }
+
         }
 
     }
