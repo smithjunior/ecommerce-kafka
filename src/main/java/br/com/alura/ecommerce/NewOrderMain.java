@@ -7,17 +7,19 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.serialization.StringSerializer;
 
 import java.util.Properties;
+import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class NewOrderMain {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         var producer = new KafkaProducer<String, String>(properties());
-        var value = "{ \"pedido_id\": 4, \"preco\": 340.00 }";
+
+        var order = "{ \"pedido_id\": "+ UUID.randomUUID().toString() +", \"preco\": "+radomNummber()+" }";
 
         var email = "Welcome! We are processing your order";
 
-        var record  = new ProducerRecord<String, String>("ECOMMERCE_NEW_ORDER", value, value);
+        var orderRecord  = new ProducerRecord<String, String>("ECOMMERCE_NEW_ORDER", order, order);
         var emailRecord  = new ProducerRecord<String, String>("ECOMMERCE_SEND_EMAIL", email, email);
 
         Callback callback = (data, ex) -> {
@@ -27,7 +29,7 @@ public class NewOrderMain {
             System.out.println(data.topic());
         };
 
-        producer.send(record, callback).get();
+        producer.send(orderRecord, callback).get();
         producer.send(emailRecord, callback).get();
     }
 
@@ -39,6 +41,14 @@ public class NewOrderMain {
         properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
 
         return properties;
+    }
+
+    private static Integer radomNummber(){
+        int min = 500;
+        int max = 5000;
+
+        //Generate random int value from 50 to 100
+        return (int)Math.floor(Math.random()*(max-min+1)+min);
     }
 
     private static String getServerAddress(){
