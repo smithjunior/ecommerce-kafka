@@ -14,7 +14,16 @@ public class NewOrderMain {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         var producer = new KafkaProducer<String, String>(properties());
-        var keyOrder = UUID.randomUUID().toString()
+
+        System.out.println("Started send messages to kafka ");
+        for(int index = 0; index <100; index++){
+            producerNewMessage(producer);
+        }
+        System.out.println("Finished send messages to kafka");
+    }
+
+    private static void producerNewMessage(KafkaProducer<String, String> producer) throws InterruptedException, ExecutionException {
+        var keyOrder = UUID.randomUUID().toString();
         var order = "{ \"pedido_id\": "+ keyOrder + ", \"preco\": "+radomNummber()+" }";
 
         var email = "Welcome! We are processing your order";
