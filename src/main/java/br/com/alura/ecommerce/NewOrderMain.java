@@ -1,66 +1,46 @@
 package  br.com.alura.ecommerce;
 
-import org.apache.kafka.clients.producer.Callback;
-import org.apache.kafka.clients.producer.KafkaProducer;
-import org.apache.kafka.clients.producer.ProducerConfig;
-import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.kafka.common.serialization.StringSerializer;
-
-import java.util.Properties;
 import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 
 public class NewOrderMain {
 
     public static void main(String[] args) throws ExecutionException, InterruptedException {
-        var producer = new KafkaProducer<String, String>(properties());
+        try(
+        var kafkaOrderDispatcher = new KafkaDispatcher<Order>();
+        var kafkaEmailDispatcher = new KafkaDispatcher<String>()
+        ) {
 
-        System.out.println("Started send messages to kafka ");
-        for(int index = 0; index <100; index++){
-            producerNewMessage(producer);
-        }
-        System.out.println("Finished send messages to kafka");
-    }
+            System.out.println("Started send messages to kafka ");
 
-    private static void producerNewMessage(KafkaProducer<String, String> producer) throws InterruptedException, ExecutionException {
-        var keyOrder = UUID.randomUUID().toString();
-        var order = "{ \"pedido_id\": "+ keyOrder + ", \"preco\": "+radomNummber()+" }";
+            for(int index = 0; index <100; index++){
+                var keyOrder = UUID.randomUUID().toString();
 
-        var email = "Welcome! We are processing your order";
+                var order = new Order(keyOrder, radomNummber());
+                producerNewOrderMessage(kafkaOrderDispatcher, keyOrder, order);
 
-        var orderRecord  = new ProducerRecord<String, String>("ECOMMERCE_NEW_ORDER", keyOrder, order);
-        var emailRecord  = new ProducerRecord<String, String>("ECOMMERCE_SEND_EMAIL", keyOrder, email);
+                var email = "Welcome! We are processing your order";
+                producerNewEmailMessage(kafkaEmailDispatcher, keyOrder, email);
 
-        Callback callback = (data, ex) -> {
-            if (ex != null) {
-                ex.printStackTrace();
             }
-            System.out.println(data.topic());
-        };
-
-        producer.send(orderRecord, callback).get();
-        producer.send(emailRecord, callback).get();
+            System.out.println("Finished send messages to kafka");
+        }
     }
 
-    private static Properties properties() {
-        var properties = new Properties();
-
-        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, getServerAddress());
-        properties.setProperty(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-        properties.setProperty(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, StringSerializer.class.getName());
-
-        return properties;
+    private static void producerNewOrderMessage(KafkaDispatcher kafkaDispatcher, String keyOrder, Order order) throws InterruptedException, ExecutionException {
+        kafkaDispatcher.send("ECOMMERCE_NEW_ORDER", keyOrder, order);
     }
 
-    private static Integer radomNummber(){
+    private static void producerNewEmailMessage(KafkaDispatcher kafkaDispatcher, String keyOrder, String email) throws ExecutionException, InterruptedException {
+        kafkaDispatcher.send("ECOMMERCE_SEND_EMAIL", keyOrder, email);
+    }
+
+    private static Double radomNummber(){
         int min = 500;
         int max = 5000;
 
         //Generate random int value from 50 to 100
-        return (int)Math.floor(Math.random()*(max-min+1)+min);
+        return Math.floor(Math.random()*(max-min+1)+min);
     }
 
-    private static String getServerAddress(){
-        return  "localhost:9092";
-    }
 }
