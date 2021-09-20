@@ -8,7 +8,7 @@ public class NewOrderMain {
     public static void main(String[] args) throws ExecutionException, InterruptedException {
         try(
         var kafkaOrderDispatcher = new KafkaDispatcher<Order>();
-        var kafkaEmailDispatcher = new KafkaDispatcher<String>()
+        var kafkaEmailDispatcher = new KafkaDispatcher<Email>()
         ) {
 
             System.out.println("Started send messages to kafka ");
@@ -19,7 +19,7 @@ public class NewOrderMain {
                 var order = new Order(keyOrder, radomNummber());
                 producerNewOrderMessage(kafkaOrderDispatcher, keyOrder, order);
 
-                var email = "Welcome! We are processing your order";
+                var email = new Email("Process successful","Welcome! We are processing your order");
                 producerNewEmailMessage(kafkaEmailDispatcher, keyOrder, email);
 
             }
@@ -31,7 +31,7 @@ public class NewOrderMain {
         kafkaDispatcher.send("ECOMMERCE_NEW_ORDER", keyOrder, order);
     }
 
-    private static void producerNewEmailMessage(KafkaDispatcher kafkaDispatcher, String keyOrder, String email) throws ExecutionException, InterruptedException {
+    private static void producerNewEmailMessage(KafkaDispatcher kafkaDispatcher, String keyOrder, Email email) throws ExecutionException, InterruptedException {
         kafkaDispatcher.send("ECOMMERCE_SEND_EMAIL", keyOrder, email);
     }
 
